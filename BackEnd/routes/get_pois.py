@@ -1,8 +1,8 @@
 from fastapi import APIRouter, HTTPException
-from ..components.user_data import UserData
-from modules.llm_request import request_to_llm
-from modules.get_pois_from_map import get_pois_from_map
-from modules.save_as import save_as
+from BackEnd.components.user_data import UserData
+from BackEnd.modules.llm_request import request_to_llm
+from BackEnd.modules.get_pois_from_map import get_pois_from_map
+from BackEnd.modules.save_as import save_as
 from uuid import uuid4
 import json
 

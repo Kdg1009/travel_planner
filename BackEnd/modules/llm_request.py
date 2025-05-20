@@ -1,4 +1,4 @@
-from BackEnd.config import gpt_api_key
+from BackEnd.config import OPENAI_API_KEY
 
 # dummy placeholder for LLM interaction
 

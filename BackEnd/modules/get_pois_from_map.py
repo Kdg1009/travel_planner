@@ -1,5 +1,5 @@
 from BackEnd.config import FOURSQUARE_API_KEY
-from llm_request import request_to_llm
+from BackEnd.modules.llm_request import request_to_llm
 
 # dummy function
 def get_pois_from_map(filter_data:str, location:str)->list:

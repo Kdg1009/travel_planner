@@ -1,9 +1,9 @@
 from fastapi import APIRouter, HTTPException
-from ..components.user_data import UserData
+from BackEnd.components.user_data import UserData
 import csv
 import os
-from modules.llm_request import request_to_llm
-from modules.route_optimizer import optimize_route
+from BackEnd.modules.llm_request import request_to_llm
+from BackEnd.modules.route_optimizer import optimize_route
 
 router = APIRouter()
 
@@ -71,7 +71,7 @@ def load_pois(pois_loc:str):
 
 # ---- Main API Endpoint ----
 @router.post("/api/route_optim")
-async def route_optimization(user_data: UserData):
+async def route_optim(user_data: UserData):
     # 1. Load POIs from CSV
     poi_list = load_pois(user_data.kwargs.get("poi_file_loc"))
 
