@@ -2,6 +2,8 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from routes import get_pois, route_optim
 
+# to run this server:
+# uvicorn main:app -reload
 app = FastAPI()
 
 app.add_middleware(

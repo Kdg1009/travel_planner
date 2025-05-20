@@ -1,2 +1,4 @@
-def optimize(pois):
-    return sorted(pois, key=lambda p: -float(p["score"]))
+# dummy function
+
+def optimize_route(scores:list):
+    pass

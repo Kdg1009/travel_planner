@@ -9,7 +9,7 @@ export default function MapLoading() {
   useEffect(() => {
     const fetchMapData = async () => {
       try {
-        const res = await fetch("http://localhost:8000/get_pois", {
+        const res = await fetch("http://localhost:8000/api/get_pois", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify(userInput),

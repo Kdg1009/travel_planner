@@ -1,7 +1,10 @@
-from BackEnd.config import map_api_key
+from BackEnd.config import FOURSQUARE_API_KEY
+from llm_request import request_to_llm
 
-def fetch_pois(region, filter_str):
-    return [
-        {"name": "Museum A", "lat": 37.1, "long": 127.1},
-        {"name": "Park B", "lat": 37.2, "long": 127.2},
+# dummy function
+def get_pois_from_map(filter_data:str, location:str)->list:
+    pois = [
+    {"name": "Gyeongbokgung", "latitude": "37.5796", "longitude": "126.9770"},
+    {"name": "N Seoul Tower", "latitude": "37.5512", "longitude": "126.9882"}
     ]
+    return pois
