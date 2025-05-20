@@ -28,7 +28,7 @@
        "start": "2025-06-01",
        "end": "2025-06-07"
      },
-     "companions": "friends",
+     "companions": "4",
      "concept": "foodie adventure",
      "extra_request": "include hidden cafes",
      "kwargs": {
