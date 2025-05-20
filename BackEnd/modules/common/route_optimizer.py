@@ -47,7 +47,4 @@ def get_days(duration: Duration) -> List[str]:
     ]
 
 def optimize_route(duration: Duration, scores: list) -> TravelPlan:
-    days = get_days(duration)
-    total_plan = []
-    
-    return TravelPlan(total_plan)
+    return sample_travel_plan
