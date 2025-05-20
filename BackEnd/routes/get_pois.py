@@ -12,7 +12,7 @@ async def get_pois(user_data: UserData):
 
         # Step 2: If no filter, call LLM to generate it
         if not filter_data:
-            filter_data = get_filter_from_llm(user_data.dict())
+            filter_data = get_filter_from_llm(user_data.model_dump())
             user_data.kwargs.filter = filter_data
 
         # Step 3: Fetch POIs based on filter

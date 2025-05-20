@@ -1,5 +1,7 @@
 from components.plan_data import Location, Visiting, DayPlan, TravelPlan
-
+from components.user_data import Duration
+from datetime import datetime, timedelta
+from typing import List
 # dummy function
 
 sample_travel_plan = TravelPlan(
@@ -32,6 +34,20 @@ sample_travel_plan = TravelPlan(
         )
     ]
 )
+# ---- optimize_helper ----
+# return list of dates within duration.start and duration.end
+def get_days(duration: Duration) -> List[str]:
+    start_date = datetime.strptime(duration.start, "%Y-%m-%d")
+    end_date = datetime.strptime(duration.end, "%Y-%m-%d")
+    delta = end_date - start_date
 
-def optimize_route(scores: list) -> TravelPlan:
-    return sample_travel_plan
+    return [
+        (start_date + timedelta(days=i)).strftime("%Y-%m-%d")
+        for i in range(delta.days + 1)
+    ]
+
+def optimize_route(duration: Duration, scores: list) -> TravelPlan:
+    days = get_days(duration)
+    total_plan = []
+    
+    return TravelPlan(total_plan)
