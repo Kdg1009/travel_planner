@@ -2,7 +2,7 @@ import csv
 import os
 
 def save_as(poi_list: list, filename: str, format: str = 'csv'):
-    path = os.path.join("temp", filename)
+    path = os.path.join("BackEnd","routes", "temp", filename)
     
     if format == 'csv':
         if not poi_list:

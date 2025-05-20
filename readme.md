@@ -2,7 +2,27 @@
 - strongly recommanding to use conda virtual environment
 - to test server, run 'pip install -r requirements.txt'
 
-2. run backend server by 'uvicorn BackEnd/main:app --reload' in travel_planner folder
+2. move to travel_planner folder and run python BackEnd/run.py
+- this will run backend server and can access through port 3000
 
-3. you can access to this server through http://localhost:3000/api/get_pois(get_pois page), and http://localhost:3000/api/route_optim(route_optim page)
-- 'post' data in form of user_data / plan_data and you will get results from them
+3. use postman to test this backend server
+- 'post' to localhost:3000/api/route_optim or localhost:3000/api/get_pois, add example json to body(select raw, type=json)
+- example json object 
+'{
+  "location": "Seoul",
+  "duration": {
+    "start": "2025-06-01",
+    "end": "2025-06-07"
+  },
+  "companions": "friends",
+  "concept": "foodie adventure",
+  "extra_request": "include hidden cafes",
+  "kwargs": {
+    "filter": {
+      "category": "cafe",
+      "rating": "4+"
+    },
+    "prev_map_data": null,
+    "poi_file_loc": "example.csv"
+  }
+}'
