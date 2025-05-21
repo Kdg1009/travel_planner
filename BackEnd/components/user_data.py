@@ -14,7 +14,7 @@ class Kwargs(BaseModel):
 class UserData(BaseModel):
     location: str
     duration: Duration
-    companions: str
+    companions: int
     concept: str
     extra_request: str
     kwargs: Kwargs

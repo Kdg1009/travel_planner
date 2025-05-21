@@ -4,9 +4,11 @@ import os
 import json
 from fastapi import HTTPException
 from components.user_data import UserData
+from components.llm_score_data import Place
+from typing import List
 
 # ---- Helper to get scores from llm ----
-def parse_llm_response_to_dict_list(llm_response: str)->list:
+def parse_llm_response_to_dict_list(llm_response: str)->List[Place]:
     """
     Parses the LLM CSV-style response (no header) into a list of dictionaries.
 
@@ -20,10 +22,10 @@ def parse_llm_response_to_dict_list(llm_response: str)->list:
     lines = llm_response.strip().splitlines()
     for line in lines:
         parts = line.split(',')
-        if len(parts) != 4:
+        if len(parts) != 5:
             # skip malformed lines or handle error
             continue
-        name, lat_str, lon_str, score_str = parts
+        name, lat_str, lon_str, score_str, concept = parts
         try:
             lat = float(lat_str)
             lon = float(lon_str)
@@ -37,17 +39,22 @@ def parse_llm_response_to_dict_list(llm_response: str)->list:
             "latitude": lat,
             "longitude": lon,
             "score": score,
+            "concept":concept,
         })
 
     return result
 
-def get_scores_from_llm(poi_list:list, user_data:UserData)->list:
+def get_scores_from_llm(poi_list:list, user_data:UserData)->List[Place]:
     # Step 1: Convert user data to readable string (already achived)
     # Step 2: Construct POI information block
     poi_info = "\n".join(
         f"- {poi['name']} (lat: {poi['latitude']}, long: {poi['longitude']})"
         for poi in poi_list
     )
+
+    # step 3-0: if user_data.kwargs.prev_map_data is not none, this request is for feedback
+    if user_data.kwargs.prev_map_data:
+        pass
 
     # Step 3: Build the prompt/query
     query = f"""
@@ -62,7 +69,7 @@ Based on the user profile below and the list of Points of Interest (POIs), score
 {poi_info}
 
 ## Expected Output Format (CSV-style, no header):
-name,latitude,longitude,score
+name,latitude,longitude,score,concept
 
 Please respond only with the list.
     """.strip()

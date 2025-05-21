@@ -10,18 +10,18 @@ async def get_pois(user_data: UserData):
     try:
         filter_data = user_data.kwargs.filter
 
-        # Step 2: If no filter, call LLM to generate it
+        # Step 1: If no filter, call LLM to generate it
         if not filter_data:
             filter_data = get_filter_from_llm(user_data.model_dump())
             user_data.kwargs.filter = filter_data
 
-        # Step 3: Fetch POIs based on filter
+        # Step 2: Fetch POIs based on filter
         poi_list = get_pois_from_map(filter_data, user_data.location)
 
-        # Step 4: Save to CSV
+        # Step 3: Save to CSV
         user_data.kwargs.poi_file_loc = save_pois(poi_list)
 
-        # Step 5: Return result
+        # Step 4: Return result
         return {
             "user_data": user_data.model_dump()
         }

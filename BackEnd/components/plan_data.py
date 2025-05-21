@@ -2,12 +2,13 @@ from pydantic import BaseModel
 from typing import List
 
 class Location(BaseModel):
-    latitude: str
-    longitude: str
+    latitude: float
+    longitude: float
 
 class Visiting(BaseModel):  # Capitalize class names by convention
     name: str
     location: Location
+    concept: str
 
 class DayPlan(BaseModel):
     date: str
