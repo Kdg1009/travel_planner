@@ -2,3 +2,16 @@
 /BackEnd/.config
 /FrontEnd/.env
 /FrontEnd/.config
+# Ignore Python cache files
+*.pyc
+*.pyo
+__pycache__/
+# .gitignore for Python
+*.py[cod]
+__pycache__/
+*.so
+*.egg-info/
+build/
+dist/
+.env
+.venv
