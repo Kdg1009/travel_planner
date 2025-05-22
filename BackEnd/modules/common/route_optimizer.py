@@ -129,7 +129,7 @@ def next_visit(scores: List[float], pois: List[Visiting], clusters: List[int],
 
     return selected_poi
 
-def optimize_route(duration: Duration, pois_data: List[Place], visits_per_day: int = 3, score_threshold=4.2) -> TravelPlan:
+def optimize_route(duration: Duration, pois_data: List[Place], visits_per_day: int = 3, score_threshold=8.0) -> TravelPlan:
     """
     Create an optimized travel plan based on POIs provided as dictionaries
     

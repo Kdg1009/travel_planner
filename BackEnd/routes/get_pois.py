@@ -6,7 +6,7 @@ from modules.get_pois_util import get_filter_from_llm, save_pois
 router = APIRouter()
 
 @router.post("/get_pois")
-async def get_pois(user_data: UserData):
+def get_pois(user_data: UserData):
     try:
         filter_data = user_data.kwargs.filter
 

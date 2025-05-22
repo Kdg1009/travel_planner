@@ -100,12 +100,3 @@ def load_pois(pois_loc):
         raise HTTPException(status_code=400, detail="Missing 'poi_csv' in kwargs")
     poi_list = load_pois_from_csv(pois_loc)
     return poi_list
-    """
-        < redis version>
-        from modules import get_pois_from_redis
-
-        poi_list = get_pois_from_redis(pois_loc)
-        if not poi_list:
-            raise HTTPException(status_code=404, detail="POIs not found in Redis")
-        return poi_list
-    """
