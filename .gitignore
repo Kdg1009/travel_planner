@@ -1,69 +1,17 @@
-# Byte-compiled / optimized / DLL files
+/BackEnd/.env
+/BackEnd/.config
+/FrontEnd/.env
+/FrontEnd/.config
+# Ignore Python cache files
+*.pyc
+*.pyo
 __pycache__/
+# .gitignore for Python
 *.py[cod]
-*$py.class
-
-# C extensions
+__pycache__/
 *.so
-
-# Distribution / packaging
+*.egg-info/
 build/
 dist/
-*.egg-info/
-.eggs/
-
-# Virtual environment
-venv/
-env/
-.venv/
-ENV/
-
-# Installer logs
-pip-log.txt
-pip-delete-this-directory.txt
-
-# Unit test / coverage reports
-htmlcov/
-.tox/
-.nox/
-.coverage
-coverage.xml
-.cache
-nosetests.xml
-pytest_cache/
-.pytest_cache/
-
-# MyPy, Pylint, Pyre type checker output
-.mypy_cache/
-.dmypy.json
-.pyre/
-
-# PyCharm, VS Code, other IDEs/editors
-.idea/
-.vscode/
-*.code-workspace
-
-# Jupyter Notebook checkpoints
-.ipynb_checkpoints
-
-# Environment variable files
 .env
-.env.*
-*.env
-*.config
-
-# SQLite / other DB files
-*.sqlite3
-*.db
-
-# Mac/Linux system files
-.DS_Store
-Thumbs.db
-
-# Logs
-*.log
-
-# Local test data or scratch files
-*.bak
-*.swp
-*.tmp
+.venv
