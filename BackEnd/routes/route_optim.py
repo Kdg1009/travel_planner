@@ -2,6 +2,7 @@ from fastapi import APIRouter, HTTPException
 from components.user_data import UserData
 from modules.common.route_optimizer import optimize_route
 from modules.route_optim_util import load_pois, get_scores_from_llm
+from modules.common.components_util import printUserData, printTravelPlan
 
 router = APIRouter()
 
@@ -21,7 +22,6 @@ def route_optim(user_data: UserData):
 
         # 4. Return updated user_data + travel plan
         user_data.kwargs.prev_map_data = travel_plan
-        
         return {
             "user_data": user_data,
             "travel_plan": travel_plan

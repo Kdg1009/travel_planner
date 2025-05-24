@@ -9,15 +9,16 @@
     - kwargs
         - filter            : for future extension(for user feedback, if llm determines that selected pois is not appropriate, then get new filter, otherwise use prev filter)
         - prev_map_data     : used in user feedback, if user wants to replace part of plan, then use this plan to re-planning
+        - poi_file_loc      : used to retreive poi list
 */
 export class UserData {
   constructor() {
     this.location = "";
     this.duration = { start: "", end: "" };
     this.companions = "";
-    this.concept = "";
+    this.concept = 0;
     this.extra_request = "";
-    this.kwargs = { filter: null, prev_map_data: null };
+    this.kwargs = { filter: null, prev_map_data: null, poi_file_loc: null };
   }
 
   toJSON() {

@@ -12,3 +12,11 @@ dist/
 .env
 .venv
 *.env
+# dependencies
+node_modules/
+temp/
+
+# optional: environment and logs
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*

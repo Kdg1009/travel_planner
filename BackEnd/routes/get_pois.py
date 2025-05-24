@@ -2,6 +2,7 @@ from fastapi import APIRouter, HTTPException
 from components.user_data import UserData
 from modules.common.get_pois_from_map import get_pois_from_map
 from modules.get_pois_util import get_filter_from_llm, save_pois
+from modules.common.components_util import printUserData
 
 router = APIRouter()
 
