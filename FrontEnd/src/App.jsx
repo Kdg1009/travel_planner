@@ -1,17 +1,22 @@
 import React from 'react';
-import { Routes, Route } from 'react-router-dom';
-import UserSubmit from './pages/UserSubmit';
-import MapLoading from './pages/MapLoading';
-import MapVisualize from './pages/MapVisualize';
+import { BrowserRouter, Routes, Route } from 'react-router-dom';
 
-function App() {
+import MainPage from './pages/MainPage';
+import InputPage from './pages/user_submit';      // 원래 파일명 기준
+import ThemePage from './pages/ThemePage';
+import SavedPlans from './pages/SavedPlans';
+import MapPage from './pages/MapPage';
+import ResultPage from './pages/ResultPage';
+
+export default function App() {
   return (
-    <Routes>
-      <Route path="/" element={<UserSubmit />} />
-      <Route path="/map_loading" element={<MapLoading />} />
-      <Route path="/map_visualize" element={<MapVisualize />} />
-    </Routes>
+      <Routes>
+        <Route path="/" element={<MainPage />} />
+        <Route path="/input" element={<InputPage />} />
+        <Route path="/theme" element={<ThemePage />} />
+        <Route path="/saved" element={<SavedPlans />} />
+        <Route path="/map" element={<MapPage />} />
+        <Route path="/result" element={<ResultPage />} />
+      </Routes>
   );
 }
-
-export default App;

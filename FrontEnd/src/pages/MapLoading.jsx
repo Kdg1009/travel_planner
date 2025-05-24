@@ -40,14 +40,13 @@ export default function MapLoading() {
         setStatus("Map ready! Redirecting...");
 
         setTimeout(() => {
-          navigate("/map", {
+          navigate("/map/result", {
             state: {
               userData: routeData.user_data,
               travelPlan: travelPlan,
             },
           });
-        }, 1000); // Short delay for smooth UX
-
+        }, 1000);
       } catch (err) {
         console.error("Failed to fetch data:", err);
         alert("⚠️ Internal server error occurred. Please try again later.");
