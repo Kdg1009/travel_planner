@@ -19,3 +19,4 @@ starlette==0.46.2
 # Add any other packages your project depends on below
 scikit-learn==1.6.1
 numpy==2.2.6
+fpdf==1.7.2

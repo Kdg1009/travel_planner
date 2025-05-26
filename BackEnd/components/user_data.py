@@ -9,7 +9,7 @@ class Duration(BaseModel):
 class Kwargs(BaseModel):
     filter: Optional[Dict[str, Any]] = None
     prev_map_data: Optional[Any] = None
-    poi_file_loc: str = None
+    poi_file_loc: Optional[str] = None
 
 class UserData(BaseModel):
     location: str

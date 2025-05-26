@@ -14,7 +14,7 @@ export class UserData {
   constructor() {
     this.location = "";
     this.duration = { start: "", end: "" };
-    this.companions = "";
+    this.companions = 1;
     this.concept = "";
     this.extra_request = "";
     this.kwargs = { filter: null, prev_map_data: null };

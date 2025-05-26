@@ -7,14 +7,14 @@ router = APIRouter()
 
 # ---- Main API Endpoint ----
 @router.post("/route_optim")
-async def route_optim(user_data: UserData):
+def route_optim(user_data: UserData):
     try:
         # 1. Load POIs from CSV (or later redis)
         poi_list = load_pois(user_data.kwargs.poi_file_loc)
     
         # 2. Get scores from LLM
         scored_pois = get_scores_from_llm(poi_list, user_data)
-    
+        
         # 3. Optimize route
         # travel_plan follows form of plan_data.TravelPlan
         travel_plan = optimize_route(user_data.duration, scored_pois)

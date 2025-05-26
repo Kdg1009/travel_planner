@@ -8,8 +8,8 @@ function App() {
   return (
     <Routes>
       <Route path="/" element={<UserSubmit />} />
-      <Route path="/loading" element={<MapLoading />} />
-      <Route path="/map" element={<MapVisualize />} />
+      <Route path="/map_loading" element={<MapLoading />} />
+      <Route path="/map_visualize" element={<MapVisualize />} />
     </Routes>
   );
 }
