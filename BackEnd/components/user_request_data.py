@@ -1,5 +1,5 @@
 from pydantic import BaseModel
-from typing import Optional, Dict, Any
+from typing import Optional, List, Any
 
 # Pydantic models for validation (user_data defined)
 class Duration(BaseModel):
@@ -7,11 +7,12 @@ class Duration(BaseModel):
     end: str
 
 class Kwargs(BaseModel):
-    filter: Optional[Dict[str, Any]] = None
+    filter: Optional[List[str]] = None
     prev_map_data: Optional[Any] = None
-    poi_file_loc: Optional[str] = None
+    cache_key: Optional[str] = None
 
-class UserData(BaseModel):
+class UserRequest(BaseModel):
+    user_id: str
     location: str
     duration: Duration
     companions: int

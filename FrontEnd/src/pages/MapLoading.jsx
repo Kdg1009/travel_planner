@@ -4,7 +4,7 @@ import { useLocation, useNavigate } from 'react-router-dom';
 export default function MapLoading() {
   const location = useLocation();
   const navigate = useNavigate();
-  const userInput = location.state?.userInput;
+  const userInput = location.state?.userRequest;
 
   console.log(userInput);
 
@@ -26,7 +26,7 @@ export default function MapLoading() {
         });
 
         const poisData = await getPoisRes.json();
-        const userData = poisData.user_data;
+        const userRequest = poisData.user_request;
 
         setProgress(50);
         setStatus("Optimizing route...");
@@ -34,7 +34,7 @@ export default function MapLoading() {
         const routeOptimRes = await fetch("http://localhost:3000/api/route_optim", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(userData),
+          body: JSON.stringify(userRequest),
         });
 
         const routeData = await routeOptimRes.json();
@@ -46,7 +46,7 @@ export default function MapLoading() {
         setTimeout(() => {
           navigate("/map_visualize", {
             state: {
-              userData: routeData.user_data,
+              userRequest: routeData.user_request,
               travelPlan: travelPlan,
             },
           });

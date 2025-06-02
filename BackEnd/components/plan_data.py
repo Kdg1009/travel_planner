@@ -8,11 +8,12 @@ class Location(BaseModel):
 class Visiting(BaseModel):  # Capitalize class names by convention
     name: str
     location: Location
-    concept: str
+    concept: List[str]
 
 class DayPlan(BaseModel):
     date: str
     place_to_visit: List[Visiting]  # List of Visiting objects
 
 class TravelPlan(BaseModel):
-    dayplan: List[DayPlan]  # List of DayPlan objects
+    user_id: str
+    plans: List[DayPlan]  # List of DayPlan objects

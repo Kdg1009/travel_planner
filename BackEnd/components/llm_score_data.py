@@ -5,4 +5,4 @@ class Place(TypedDict):
     latitude: float
     longitude: float
     score: float
-    concept: str
+    category: List[str]

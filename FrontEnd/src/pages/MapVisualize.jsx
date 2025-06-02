@@ -23,7 +23,7 @@ export default function MapVisualize() {
   const { state } = useLocation();
   const navigate = useNavigate();
   const travelPlan = state.travelPlan;
-  const userData = state.userData;
+  const userRequest = state.userRequest;
 
   const [selectedDayIndex, setSelectedDayIndex] = useState(0);
   const [routeGeoJson, setRouteGeoJson] = useState(null);
@@ -32,21 +32,12 @@ export default function MapVisualize() {
   const [loadingRoute, setLoadingRoute] = useState(false);
   const [currentPlaces, setCurrentPlaces] = useState([]);
 
-  // Early error handling for empty dayplan
-  if (!travelPlan?.dayplan || travelPlan.dayplan.length === 0) {
-    return (
-      <div>
-        <h2>Error</h2>
-        <p>No day plans found in the travel plan.</p>
-        <button onClick={() => navigate(-1)}>Go Back</button>
-      </div>
-    );
-  }
+  const isInvalidPlan = !travelPlan?.plans || travelPlan.plans.length === 0;
 
   const getLatLng = (loc) => {
     if (!loc || loc.latitude == null || loc.longitude == null) {
       console.warn("Invalid location object:", loc);
-      return [37.5665, 126.9780]; // or default center like [37.5665, 126.9780] for Seoul
+      return [37.5665, 126.9780]; // Seoul default
     }
     return [loc.latitude, loc.longitude];
   };
@@ -55,7 +46,9 @@ export default function MapVisualize() {
     list.map((v) => [v.location.longitude, v.location.latitude]);
 
   useEffect(() => {
-    const day = travelPlan.dayplan[selectedDayIndex];
+    if (isInvalidPlan) return;
+
+    const day = travelPlan.plans[selectedDayIndex];
     const places = day?.place_to_visit || [];
 
     setCurrentPlaces(places);
@@ -74,27 +67,26 @@ export default function MapVisualize() {
         setRouteGeoJson(null);
       })
       .finally(() => setLoadingRoute(false));
-  }, [selectedDayIndex, travelPlan]);
+  }, [selectedDayIndex, travelPlan, isInvalidPlan]);
 
   const handleSendEmail = async () => {
     try {
-      const response = await axios.post("http://localhost:8000/api/download_plan", {
-        user_id: userData.kwargs.poi_file_loc,
-        travel_plan: travelPlan,
-      }, {
-        responseType: "blob" // Expected a binary PDF
-      });
-      
-      // Create a blob from the response
+      const response = await axios.post(
+        "http://localhost:8000/api/save_plan",
+        {
+          user_id: userRequest.kwargs.cache_key,
+          travel_plan: travelPlan,
+        },
+        {
+          responseType: "blob",
+        }
+      );
+
       const blob = new Blob([response.data], { type: "application/pdf" });
-
-      // Create a URL for the blob
       const url = window.URL.createObjectURL(blob);
-
-      // Create a temporary download link
       const link = document.createElement("a");
       link.href = url;
-      link.setAttribute("download", "travel_plan.pdf"); // File name
+      link.setAttribute("download", "travel_plan.pdf");
       document.body.appendChild(link);
       link.click();
       link.remove();
@@ -106,78 +98,88 @@ export default function MapVisualize() {
   };
 
   const handleRetry = async () => {
-    const updatedUserData = {
-      ...userData,
+    const updatedUserRequest = {
+      ...userRequest,
       extra_request: feedback,
     };
-    navigate("/map_loading", { state: { userInput: updatedUserData } });
+    navigate("/map_loading", { state: { userInput: updatedUserRequest } });
   };
 
   return (
     <div>
-      <h2>Final Route</h2>
+      {isInvalidPlan ? (
+        <>
+          <h2>Error</h2>
+          <p>No day plans found in the travel plan.</p>
+          <button onClick={() => navigate(-1)}>Go Back</button>
+        </>
+      ) : (
+        <>
+          <h2>Final Route</h2>
 
-      <select
-        onChange={(e) => setSelectedDayIndex(Number(e.target.value))}
-        value={selectedDayIndex}
-      >
-        {travelPlan.dayplan.map((day, i) => (
-          <option key={i} value={i}>
-            Day {i + 1}: {day.date}
-          </option>
-        ))}
-      </select>
+          <select
+            onChange={(e) => setSelectedDayIndex(Number(e.target.value))}
+            value={selectedDayIndex}
+          >
+            {travelPlan.plans.map((day, i) => (
+              <option key={i} value={i}>
+                Day {i + 1}: {day.date}
+              </option>
+            ))}
+          </select>
 
-      {loadingRoute && <p>Loading route...</p>}
+          {loadingRoute && <p>Loading route...</p>}
 
-      {currentPlaces.length > 0 && (
-        <MapContainer
-          center={getLatLng(currentPlaces[0].location)}
-          zoom={13}
-          style={{ height: "500px", width: "100%", marginTop: "1em" }}
-          key={selectedDayIndex} // ensures reset on day change
-        >
-          <TileLayer
-            attribution='&copy; <a href="https://osm.org">OpenStreetMap</a> contributors'
-            url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
-          />
-          {currentPlaces.map((visit, i) => (
-            <Marker key={i} position={getLatLng(visit.location)}>
-              <Popup>
-                <strong>{visit.name}</strong> <br />
-                Concept: {visit.concept} <br />
-                Address: {visit.address || "N/A"} <br />
-              </Popup>
-            </Marker>
-          ))}
-          {routeGeoJson && <GeoJSON data={routeGeoJson} />}
-        </MapContainer>
+          {currentPlaces.length > 0 && (
+            <MapContainer
+              center={getLatLng(currentPlaces[0].location)}
+              zoom={13}
+              style={{ height: "500px", width: "100%", marginTop: "1em" }}
+              key={selectedDayIndex}
+            >
+              <TileLayer
+                attribution='&copy; <a href="https://osm.org">OpenStreetMap</a> contributors'
+                url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+              />
+              {currentPlaces.map((visit, i) => (
+                <Marker key={i} position={getLatLng(visit.location)}>
+                  <Popup>
+                    <strong>{visit.name}</strong> <br />
+                    Concept: {visit.concept.join(", ")} <br />
+                    Address: {visit.address || "N/A"} <br />
+                  </Popup>
+                </Marker>
+              ))}
+              {routeGeoJson && <GeoJSON data={routeGeoJson} />}
+            </MapContainer>
+          )}
+
+          <div style={{ marginTop: "1em" }}>
+            <h3>Send to Email</h3>
+            <input
+              type="email"
+              placeholder="Enter email"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+            />
+            <button disabled={!email} onClick={handleSendEmail}>
+              Send
+            </button>
+          </div>
+
+          <div style={{ marginTop: "1em" }}>
+            <h3>Retry with Feedback</h3>
+            <textarea
+              placeholder="Add feedback to improve the plan"
+              value={feedback}
+              onChange={(e) => setFeedback(e.target.value)}
+            />
+            <button disabled={!feedback} onClick={handleRetry}>
+              Retry
+            </button>
+          </div>
+        </>
       )}
-
-      <div style={{ marginTop: "1em" }}>
-        <h3>Send to Email</h3>
-        <input
-          type="email"
-          placeholder="Enter email"
-          value={email}
-          onChange={(e) => setEmail(e.target.value)}
-        />
-        <button disabled={!email} onClick={handleSendEmail}>
-          Send
-        </button>
-      </div>
-
-      <div style={{ marginTop: "1em" }}>
-        <h3>Retry with Feedback</h3>
-        <textarea
-          placeholder="Add feedback to improve the plan"
-          value={feedback}
-          onChange={(e) => setFeedback(e.target.value)}
-        />
-        <button disabled={!feedback} onClick={handleRetry}>
-          Retry
-        </button>
-      </div>
     </div>
   );
 }

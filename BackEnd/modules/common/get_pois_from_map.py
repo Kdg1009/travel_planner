@@ -1,70 +1,86 @@
 from config import FOURSQUARE_API_KEY
-from modules.common.llm_request import request_to_llm
-from typing import List
+from typing import List, Optional
+import requests
+from components.user_request_data import UserRequest
 
-# dummy function
-def get_pois_from_map(filter_data:str=None, location:str=None)->List[dict]:
-    # return type has to keep this form
-    pois = [
-    {"name": "Namsan Tower", "latitude": "37.5512", "longitude": "126.9882"},
-    {"name": "Gyeongbokgung Palace", "latitude": "37.5796", "longitude": "126.9770"},
-    {"name": "Myeongdong Shopping Street", "latitude": "37.5639", "longitude": "126.9850"},
-    {"name": "Bukchon Hanok Village", "latitude": "37.5826", "longitude": "126.9830"},
-    {"name": "Dongdaemun Design Plaza", "latitude": "37.5665", "longitude": "127.0094"},
-    {"name": "Lotte World Tower", "latitude": "37.5131", "longitude": "127.1025"},
-    {"name": "COEX Mall", "latitude": "37.5120", "longitude": "127.0580"},
-    {"name": "Changdeokgung Palace", "latitude": "37.5794", "longitude": "126.9910"},
-    {"name": "Cheonggyecheon Stream", "latitude": "37.5683", "longitude": "126.9778"},
-    {"name": "Insadong", "latitude": "37.5740", "longitude": "126.9855"},
-    {"name": "Han River Park", "latitude": "37.5280", "longitude": "126.9326"},
-    {"name": "Seoul Forest", "latitude": "37.5442", "longitude": "127.0376"},
-    {"name": "Seoullo 7017", "latitude": "37.5552", "longitude": "126.9696"},
-    {"name": "Itaewon", "latitude": "37.5346", "longitude": "126.9949"},
-    {"name": "Hongdae Street", "latitude": "37.5562", "longitude": "126.9236"},
-    {"name": "Yeouido Hangang Park", "latitude": "37.5282", "longitude": "126.9326"},
-    {"name": "Seodaemun Prison History Hall", "latitude": "37.5744", "longitude": "126.9573"},
-    {"name": "63 Building", "latitude": "37.5194", "longitude": "126.9405"},
-    {"name": "Lotte World Adventure", "latitude": "37.5110", "longitude": "127.0980"},
-    {"name": "Ewha Womans University", "latitude": "37.5618", "longitude": "126.9463"},
-    {"name": "Seoul Tower Plaza", "latitude": "37.5512", "longitude": "126.9882"},
-    {"name": "Olympic Park", "latitude": "37.5194", "longitude": "127.1210"},
-    {"name": "K-Star Road", "latitude": "37.5255", "longitude": "127.0361"},
-    {"name": "National Museum of Korea", "latitude": "37.5230", "longitude": "126.9804"},
-    {"name": "War Memorial of Korea", "latitude": "37.5365", "longitude": "126.9770"},
-    {"name": "Namdaemun Market", "latitude": "37.5595", "longitude": "126.9780"},
-    {"name": "Gwangjang Market", "latitude": "37.5704", "longitude": "126.9991"},
-    {"name": "Bongeunsa Temple", "latitude": "37.5143", "longitude": "127.0577"},
-    {"name": "Hangang Bridge", "latitude": "37.5249", "longitude": "126.9534"},
-    {"name": "Seoul Museum of Art", "latitude": "37.5637", "longitude": "126.9751"},
-    {"name": "Blue House", "latitude": "37.5869", "longitude": "126.9748"},
-    {"name": "Yangjaecheon Stream", "latitude": "37.4674", "longitude": "127.0372"},
-    {"name": "Digital Media City", "latitude": "37.5779", "longitude": "126.8904"},
-    {"name": "Samcheong-dong", "latitude": "37.5821", "longitude": "126.9816"},
-    {"name": "Seochon Village", "latitude": "37.5796", "longitude": "126.9692"},
-    {"name": "Jamsil Baseball Stadium", "latitude": "37.5142", "longitude": "127.0711"},
-    {"name": "Haneul Park", "latitude": "37.5684", "longitude": "126.8854"},
-    {"name": "Dongmyo Flea Market", "latitude": "37.5742", "longitude": "127.0399"},
-    {"name": "Bamdokkaebi Night Market", "latitude": "37.5282", "longitude": "126.9326"},
-    {"name": "Lotte Mart Seoul Station", "latitude": "37.5547", "longitude": "126.9696"},
-    {"name": "Kakao Friends Hongdae", "latitude": "37.5565", "longitude": "126.9228"},
-    {"name": "Alive Museum Insadong", "latitude": "37.5740", "longitude": "126.9855"},
-    {"name": "Seoul Animation Center", "latitude": "37.5521", "longitude": "126.9865"},
-    {"name": "Hanok Cafe", "latitude": "37.5799", "longitude": "126.9852"},
-    {"name": "Jongmyo Shrine", "latitude": "37.5743", "longitude": "126.9947"},
-    {"name": "Garosu-gil", "latitude": "37.5194", "longitude": "127.0226"},
-    {"name": "Hangang Moonlight Fountain", "latitude": "37.5206", "longitude": "126.9770"},
-    {"name": "Starfield COEX Aquarium", "latitude": "37.5126", "longitude": "127.0606"},
-    {"name": "VR Plus Hongdae", "latitude": "37.5572", "longitude": "126.9230"},
-    {"name": "Sky Park", "latitude": "37.5684", "longitude": "126.8854"},
-    {"name": "Seoul Grand Park", "latitude": "37.4360", "longitude": "127.0078"},
-    {"name": "Gwacheon National Science Museum", "latitude": "37.4469", "longitude": "126.9959"},
-    {"name": "Seoul Botanic Park", "latitude": "37.5699", "longitude": "126.8340"},
-    {"name": "Ihwa Mural Village", "latitude": "37.5744", "longitude": "127.0025"},
-    {"name": "Seoul Book Bogo", "latitude": "37.5384", "longitude": "127.0017"},
-    {"name": "Oil Tank Culture Park", "latitude": "37.5695", "longitude": "126.8946"},
-    {"name": "National Folk Museum of Korea", "latitude": "37.5812", "longitude": "126.9790"},
-    {"name": "D Museum", "latitude": "37.5452", "longitude": "127.0021"},
-    {"name": "KT&G Sangsangmadang", "latitude": "37.5536", "longitude": "126.9220"},
-    {"name": "Cafe Onion Anguk", "latitude": "37.5770", "longitude": "126.9861"}
-]
+FOURSQUARE_API_URL = "https://api.foursquare.com/v3/places/search"
+
+HEADERS = {
+    "Authorization": FOURSQUARE_API_KEY,
+    "Accept": "application/json"
+}
+
+def get_pois_from_map(user_request: Optional[UserRequest] = None, filter_data: Optional[str] = None, limit: int=50) -> List[dict]:
+    """
+    Fetches POIs using Foursquare Places API based on location and optional filter.
+    
+    :param filter_data: Optional category keyword (e.g. "cafe", "museum")
+    :param location: Optional location string (e.g. "Seoul")
+    :return: List of POIs (each as a dictionary)
+    """
+    if not user_request.location:
+        raise ValueError("Location must be provided.")
+
+    # 1. convert location to corresponding to latitude/longitude
+    geo_resp = requests.get(
+        "https://nominatim.openstreetmap.org/search",
+        params={"q": user_request.location, "format": "json"},
+        headers={'User-Agent': 'TravelPlannerApp/1.0 ehrms1009@hanmail.net'}
+    )
+    # Check if the response is OK and contains JSON
+    if geo_resp.status_code == 200 and geo_resp.text.strip():
+        try:
+            geo_data = geo_resp.json()
+        except ValueError as e:
+            print("JSON decode error:", e)
+            print("Response content:", geo_resp.text)
+    else:
+        print(f"Request failed: status {geo_resp.status_code}")
+        print("Response content:", geo_resp.text)
+    
+    lat = geo_data[0]["lat"]
+    lon = geo_data[0]["lon"]
+
+    # 2. request to foursquare api to get filter satisfying pois
+    params = {
+    "ll": f"{lat},{lon}",
+    "categories": filter_data or "",     # Category IDs like "10027,10028"
+    "query": user_request.concept,       # e.g., "art museum" or "family friendly"
+    "limit": limit,
+    "sort": "RELEVANCE",                 # Important: tells Foursquare to rank by query relevance
+    "radius":50000
+    }
+
+    response = requests.get(FOURSQUARE_API_URL, headers=HEADERS, params=params)
+    
+    if response.status_code != 200:
+        raise Exception(f"Failed to fetch POIs: {response.text}")
+    
+    results = response.json().get("results", [])
+    pois = []
+
+    # https://api.foursquare.com/v3/places/{fsq_id} => more detailed information about poi 
+    # returns full info: phone, website, categories, hours, photos, etc. (https://api.foursquare.com/v3/places/{fsq_id}/photos)
+    # gets tips, reviews
+    # store fsq_id in a DB and let users "favorite" or "review" those place
+    # Store previously seen fsq_ids to prevent recommending the same spot again.
+    for place in results:
+        pois.append({
+            "name": place.get("name"),
+            "lat": place["geocodes"]["main"]["latitude"],
+            "lon": place["geocodes"]["main"]["longitude"],
+            "categories": [cat["name"] for cat in place.get("categories", [])],
+            "fsq_id": place.get("fsq_id")
+        })
+
     return pois
+
+def extract_pois(user_request:UserRequest, filters:List[str], limit=30)->List[dict]:
+    result = []
+    for f in filters:
+        pois = get_pois_from_map(user_request, f, limit=limit)
+        result.extend(pois)
+
+        if len(result) >= limit:
+            return result
+    return result

@@ -1,5 +1,5 @@
 from components.plan_data import Location, Visiting, DayPlan, TravelPlan
-from components.user_data import Duration
+from components.user_request_data import Duration
 from components.llm_score_data import Place
 from datetime import datetime, timedelta
 from typing import List, Optional
@@ -129,7 +129,7 @@ def next_visit(scores: List[float], pois: List[Visiting], clusters: List[int],
 
     return selected_poi
 
-def optimize_route(duration: Duration, pois_data: List[Place], visits_per_day: int = 3, score_threshold=80) -> TravelPlan:
+def optimize_route(user_id: str, duration: Duration, pois_data: List[Place], visits_per_day: int = 3, score_threshold=7.4) -> TravelPlan:
     """
     Create an optimized travel plan based on POIs provided as dictionaries
     
@@ -156,7 +156,7 @@ def optimize_route(duration: Duration, pois_data: List[Place], visits_per_day: i
                 latitude=poi_dict['latitude'],
                 longitude=poi_dict['longitude']
             ),
-            concept=poi_dict['concept']
+            concept=poi_dict['category']
         )
         pois.append(poi)
         
@@ -170,7 +170,7 @@ def optimize_route(duration: Duration, pois_data: List[Place], visits_per_day: i
 
     # Early return if no POIs meet the threshold
     if not filtered_pois:
-        return TravelPlan(dayplan=[])
+        return TravelPlan(user_id=user_id, plans=[])
         
     # Cluster POIs (only the filtered ones)
     clusters = cluster_pois(filtered_pois)
@@ -181,7 +181,7 @@ def optimize_route(duration: Duration, pois_data: List[Place], visits_per_day: i
     remaining_clusters = clusters.copy()
 
     # Initialize travel plan
-    travel_plan = TravelPlan(dayplan=[])
+    travel_plan = TravelPlan(user_id=user_id, plans=[])
 
     # Create day plans
     for day_idx in range(len(days)):
@@ -221,6 +221,6 @@ def optimize_route(duration: Duration, pois_data: List[Place], visits_per_day: i
             prev_cluster = remaining_clusters.pop(idx)
         
         # Add day plan to travel plan
-        travel_plan.dayplan.append(day_plan)
+        travel_plan.plans.append(day_plan)
     
     return travel_plan

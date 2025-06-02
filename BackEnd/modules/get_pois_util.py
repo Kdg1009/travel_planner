@@ -1,52 +1,88 @@
 from modules.common.llm_request import request_to_llm
-from modules.common.save_as import save_as
-from uuid import uuid4
 import json
+from modules.common.cache_util import save_data
+import csv
+from typing import List
+from collections import deque
+from components.user_request_data import UserRequest
 
-# ---- Helper to get filter from llm ----
+def parse_filter_from_response(target_category, user_profile) -> List[dict]:
+    if not target_category:
+        return []
+    instruction = (
+    "You must select **ONLY FROM THE CATEGORIES LISTED BELOW**. Choose at most 3 categories that match the user's profile. "
+    "Respond only in this format: {\"category\": [\"A\", \"B\"]} — the category names must match exactly from the list below.\n"
+    "If none are suitable, return an empty list like this: {\"category\": []}.\n"
+    "DO NOT invent new categories or rephrase them. Use copy-paste from the list.\n\n"
+    f"CATEGORIES:\n{' / '.join(target_category)}\n\n"
+    f"User Profile:\n{user_profile}"
+    )
 
-def get_filter_from_llm(user_data: dict) -> dict:
-    # this will be tested after get_pois_from_map completed
+    response = request_to_llm(instruction)
+    result = json.loads(response)
+    chosens = result.get("category")
+    return [{"chosen":chosen, "target_category":target_category} for chosen in chosens]
 
-    """
-    Generates a Foursquare-compatible filter using LLM based on user preferences.
-
-    :param user_data: Dictionary of user input preferences.
-    :return: Dictionary containing filter parameters for Foursquare API.
-    """
-
+# Choose a Foursquare filter using LLM based on user preferences.
+def get_filter_from_llm(user_data: UserRequest) -> List[str]:
     # Construct readable user profile
     user_profile = (
-        f"User is planning a trip to {user_data.get('location')}.\n"
-        f"Travel dates: {user_data.get('duration', {}).get('start')} to {user_data.get('duration', {}).get('end')}.\n"
-        f"Companions: {user_data.get('companions')}.\n"
-        f"Travel concept or theme: {user_data.get('concept')}.\n"
-        f"Additional requests: {user_data.get('extra_request')}\n"
+        f"Companions: {user_data.companions}.\n"
+        f"Travel concept or theme: {user_data.concept}.\n"
+        f"Additional requests: {user_data.extra_request}\n"
     )
 
-    # Instruction to GPT to create a filter
-    instruction = (
-        "Based on the user's travel profile below, generate a JSON object for querying the Foursquare API.\n"
-        "The filter should help extract 50–70 Points of Interest (POIs) that align with the user's interests.\n"
-        "Return only a JSON object with keys like 'categories', 'radius', 'keywords', and any relevant filters.\n"
-        "Make sure the format is valid JSON and contains only filter information—no explanation.\n"
-    )
+    # Load category tree from JSON
+    with open('public/category_tree.json', 'r', encoding='utf-8') as file:
+        whole_category = json.load(file)
+    target_category = whole_category["Category"]
 
-    query = instruction + "\nUser Profile:\n" + user_profile
+    # Load id map from JSON
+    with open('public/id_map.json', 'r', encoding='utf-8') as file:
+        name_to_id = json.load(file)
 
-    # Send to GPT
-    response = request_to_llm(query)
+    result_filters = []
+    queue = deque([])
 
-    # Parse response to dict
-    try:
-        result = json.loads(response)
-        return result
-    except json.JSONDecodeError:
-        raise ValueError("GPT returned an invalid JSON response for filters.")
+    chosens = parse_filter_from_response(target_category, user_profile)
+    queue.extend(chosens)
+    
+    while True:
+        if not queue:
+            break
+        try:
+            # append filter in BFS style
+            chosen_target = queue.popleft()
+            chosen = chosen_target.get("chosen")
+            target_category = chosen_target.get("target_category", [])
 
+            if not chosen or chosen not in target_category:
+                print(f"⚠️ Skipping invalid chosen category: '{chosen}'")
+                continue  # Skip this iteration and go to next in queue
+
+            category_id = name_to_id.get(chosen)
+            if not category_id:
+                print(f"⚠️ Category '{chosen}' not found in id mapping.")
+                continue  # Skip if ID not found
+
+            print(f"appending {category_id}... queue:{result_filters}")
+            result_filters.append(category_id)
+
+            # Proceed deeper in hierarchy
+            target_category = whole_category.get(chosen, [])
+            chosens = parse_filter_from_response(target_category, user_profile)
+            queue.extend(chosens)
+
+        except Exception as e:
+            print(f"⚠️ Error during BFS filter parsing: {e}")
+            continue
+    return list(reversed(result_filters))
 
 # ---- Helper to save pois ----
+# ---- save poi_list in cache ----
 def save_pois(poi_list):
-    filename = f"pois_{uuid4().hex}.csv"
-    save_as(poi_list, filename, format="csv")
-    return filename
+    payload = {
+        "poi_list": poi_list
+    }
+    key = save_data(payload)
+    return key

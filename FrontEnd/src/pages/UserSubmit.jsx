@@ -1,8 +1,12 @@
 import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom'; // <-- import useNavigate
+import { useLocation, useNavigate } from 'react-router-dom'; // <-- import useNavigate
 import '../css/userSubmit.css';
 
 export default function UserSubmit() {
+  const location = useLocation();
+  const UserId = location.state?.userId;
+
+  // defining what's inside in user submiting form
   const [form, setForm] = useState({
     location: '',
     durationStart: '',
@@ -26,7 +30,8 @@ export default function UserSubmit() {
 
   const handleSubmit = () => {
     // Format data to match the shape expected by backend or next page
-    const userData = {
+    const userRequest = {
+      user_id: UserId || '',
       location: form.location,
       duration: {
         start: form.durationStart,
@@ -38,12 +43,12 @@ export default function UserSubmit() {
       kwargs: {
       filter:null,
       prev_map_data:null,
-      poi_file_loc:null
+      cache_key:null
     },
     };
 
     // Navigate to map_loading page with state
-    navigate('/map_loading', { state: { userInput: userData } });
+    navigate('/map_loading', { state: { userRequest: userRequest } });
   };
 
   return (
@@ -52,8 +57,12 @@ export default function UserSubmit() {
         <label htmlFor="location">Location:</label>
         <select name="location" id="location" value={form.location} onChange={handleChange}>
           <option value="">-- Select --</option>
-          <option value="Seoul">Seoul</option>
-          <option value="Busan">Busan</option>
+          <option value="New York">New York</option>
+          <option value="Los Angeles">Los Angeles</option>
+          <option value="Sydney">Sydney</option>
+          <option value="Tokyo">Tokyo</option>
+          <option value="Hongkong">Hongkong</option>
+          <option value="Jeju">Jeju</option>
         </select>
 
         <label htmlFor="durationStart">Duration Start:</label>
@@ -88,9 +97,11 @@ export default function UserSubmit() {
         <label htmlFor="concept">Trip Concept:</label>
         <select name="concept" id="concept" value={form.concept} onChange={handleChange}>
           <option value="">-- Select --</option>
-          <option value="Relaxing">Relaxing</option>
-          <option value="Adventure">Adventure</option>
-          <option value="Cultural">Cultural</option>
+          <option value="peaceful nature areas">🌿 Nature & Relaxation</option>
+          <option value="popular local food spots">🍜 Foodie Adventure</option>
+          <option value="cultural sites and heritage attractions">🏛️ Cultural & Historical</option>
+          <option value="family adventure attractions">🎢 Active & Funion</option>
+          <option value="scenic viewpoints for photography">📸 Scenic & Photogenic</option>
         </select>
 
         <label htmlFor="extra_request">Extra Request:</label>
