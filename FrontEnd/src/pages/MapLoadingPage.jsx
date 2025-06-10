@@ -7,6 +7,7 @@ export default function MapLoading() {
   const navigate = useNavigate();
   const userInput = location.state?.userRequest;
 
+  console.log("this is userInput:\n", userInput)
   console.log(userInput);
 
   const [progress, setProgress] = useState(0);

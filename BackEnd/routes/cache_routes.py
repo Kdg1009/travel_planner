@@ -1,5 +1,5 @@
-from fastapi import APIRouter, Body
-from typing import Optional, Dict
+from fastapi import APIRouter, Body, HTTPException
+from typing import Optional, Dict, Any
 import time
 from components.cache_data import CacheData
 
@@ -18,11 +18,10 @@ def cache_save(key: str, value: Dict = Body(...), expire: Optional[int] = None) 
         cache[key] = CacheData(data=value,expires_at=expires_at)
 
     cache[key].update(value)
-    print_status()
 
 # Retrieve a data by key, checking expiration
 @router.get("/cache/get")
-def cache_get(key: str, extend_minutes: int = 30) -> Dict[str, CacheData]:
+def cache_get(key: str, extend_minutes: int = 30) -> Dict[str, Optional[Dict]]:
     item = cache.get(key)
     if not item:
         print("key not found")
@@ -39,16 +38,35 @@ def cache_get(key: str, extend_minutes: int = 30) -> Dict[str, CacheData]:
         item.expires_at = time.time() + (extend_minutes * 60)
         print(f"Cache extended for key '{key}' by {extend_minutes} minutes")
     
-    return {"value": item}
+    return {"value": item.data}
 
 
 # Delete a data by key
-@router.get("cache/delete")
-def cache_del(key:str) -> None:
-    item = cache.get(key)
-    if item:
-        del cache[key]
+@router.post("/cache/delete")
+def cache_del(cache_key:str, data_key:str=None) -> Optional[Dict]:
+    cache_data = cache.get(cache_key)
 
-def print_status():
-    print("< cache status >")
-    print(cache)
+    if not cache_data:
+        raise HTTPException(400, f"No such cache key: '{cache_key}'")
+
+    if data_key is None:
+        # Remove the entire CacheData entry
+        removed = cache.pop(cache_key)
+        return {
+            "value": removed.data
+        }
+    
+    result = cache_data.pop(data_key)
+    if result:
+        print(f"successfully remove {result} from {cache_key}")
+        return {"value": result}
+    else:
+        raise HTTPException(status_code=404, detail=f"No such key '{data_key}' in cache '{cache_key}'")
+
+# Check cache status
+@router.get("/cache/status")
+def cache_state(cache_key:str) -> Optional[Dict]:
+    cache_data = cache.get(cache_key)
+    if not cache_data:
+        raise HTTPException(status_code=404, detail=f"No such key '{cache_key}' in cache'")
+    return {"value":cache_data.data}

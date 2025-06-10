@@ -8,17 +8,30 @@ export default function MapVisualize() {
     const { state } = useLocation();
     const navigate = useNavigate();
     const travelPlan = state?.travelPlan;
-    const userData = state?.userData;
-
+    const userRequest = state?.userRequest; // if userRequest is null, then this is called by savePage.jsx. Disable save button and feedback button
     const [selectedDayIndex, setSelectedDayIndex] = useState(0);
     const [routeGeoJson, setRouteGeoJson] = useState(null);
-    const [email, setEmail] = useState("");
     const [feedback, setFeedback] = useState("");
     const [loadingRoute, setLoadingRoute] = useState(false);
     const [currentPlaces, setCurrentPlaces] = useState([]);
 
-    const handleSendEmail = () => {
-        console.log("Email 보내기 기능은 아직 구현되지 않았습니다.");
+    const savePlan = async () => {
+    try {
+        const response = await axios.post("http://localhost:8000/api/save_plan", {
+            user_req: userRequest,
+            travel_plan: travelPlan,
+        });
+
+        if (response.data.success) {
+            alert("일정이 성공적으로 저장되었습니다.");
+        } else {
+            alert("일정 저장에 실패했습니다: " + (response.data.message || ""));
+        }
+    } catch (error) {
+            console.error("Error saving plan:", error);
+            alert("서버 오류로 인해 일정을 저장할 수 없습니다.");
+    }
+    navigate("/saved");
     };
 
     const getLatLngObj = (location) => ({
@@ -60,10 +73,10 @@ export default function MapVisualize() {
 
     const handleRetry = async () => {
         const updatedUserData = {
-            ...userData,
+            ...userRequest,
             extra_request: feedback,
         };
-        navigate("/map_loading", { state: { userInput: updatedUserData } });
+        navigate("/loading", { state: { userRequest: updatedUserData } });
     };
 
     // 조건부 렌더링
@@ -122,7 +135,7 @@ export default function MapVisualize() {
                 <button className={styles.navButton} onClick={() => navigate("/")}>
                     메인메뉴로 돌아가기
                 </button>
-                <button className={styles.navButton} onClick={handleSendEmail} disabled={!email}>
+                <button className={styles.navButton} onClick={savePlan} disabled={!userRequest}>
                     일정 저장하기
                 </button>
             </div>
@@ -131,7 +144,7 @@ export default function MapVisualize() {
                 <h3 className={styles.retryTitle}>피드백 기반 재시도</h3>
                 <button
                     className={styles.retryButton}
-                    disabled={!feedback}
+                    disabled={!(feedback && userRequest)}
                     onClick={handleRetry}
                 >
                     Retry
