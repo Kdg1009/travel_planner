@@ -23,15 +23,13 @@ def get_scores_for_batch(batch: List[Dict], user_data: UserRequest) -> List[Plac
         reviews = get_reviews(name, id)  # Assume this returns a List[str] of review texts
 
         if not isinstance(reviews, list):
-            print(f"⚠️ Invalid review data for {name}: {reviews}")
-            return []
+            print(f"⚠️ Invalid review data for {name}: {reviews}") # if there is no reviews or error in retrieving reviews, just ignore it
 
         # Step 2: Construct request for LLM
         try:
             reviews_text = "\n".join([f"{i+1}. {review['text']}" for i, review in enumerate(reviews)])
         except Exception as e:
             print(f"⚠️ Failed to format reviews for {name}: {e}, raw reviews: {reviews}")
-            return []
 
         llm_prompt = f"""
 You are a travel assistant helping a user select the most fitting places to visit.
@@ -45,7 +43,7 @@ You are given reviews for a place called "{name}".
 Read each review and evaluate **how well this place fits the user's preferences**, on a scale of 1 to 10 (10 = perfect match, 1 = very poor fit).
 
 Respond with a **comma-separated list** of integers representing scores **in order** for each review (no text, no explanation, only numbers). Example: `7,6,8,5,...`
-
+If there is no reviews, then just score it by yourself.
 place categories:
 {category}
 

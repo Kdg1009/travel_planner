@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import axios from "axios";
 import GoogleMapComponent from "../components/GoogleMapComponent";
+import ScheduleViewer from "../components/ScheduleViewer";
 import styles from "./MapVisualize.module.css";
 
 export default function MapVisualize() {
@@ -14,6 +15,7 @@ export default function MapVisualize() {
     const [feedback, setFeedback] = useState("");
     const [loadingRoute, setLoadingRoute] = useState(false);
     const [currentPlaces, setCurrentPlaces] = useState([]);
+    const [segmentRoutes, setSegmentRoutes] = useState([]);
 
     const savePlan = async () => {
     try {
@@ -60,6 +62,16 @@ export default function MapVisualize() {
                     coordinates: getORSCoords(places),
                 });
                 setRouteGeoJson(res.data);
+                
+                const segments = res.data.features?.[0]?.properties?.segments;
+                if (segments) {
+                    setSegmentRoutes(segments);
+                    console.log("✅ segmentRoutes 저장됨:", segments); // 디버깅 로그
+                } else {
+                    setSegmentRoutes([]);
+                    console.warn("⚠️ segment 정보가 없습니다.");
+                }
+
             } catch (err) {
                 console.error("Route fetch failed", err);
                 setRouteGeoJson(null);
@@ -109,6 +121,12 @@ export default function MapVisualize() {
                         ))}
                     </select>
                     {loadingRoute && <p>Loading route...</p>}
+
+                    <ScheduleViewer 
+                        places={currentPlaces} 
+                        segments={segmentRoutes} 
+                    />
+
                 </div>
 
                 <div className={styles.mapBox}>

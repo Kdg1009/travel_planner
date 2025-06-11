@@ -1,9 +1,17 @@
-// src/components/GoogleMapComponent.jsx
 import { useEffect, useRef } from "react";
 
-export default function GoogleMapComponent({ places }) {
+export default function GoogleMapComponent({ places, routeGeoJson }) {
     const mapRef = useRef(null);
-
+    // GeoJSON → Google Maps LatLng[] 변환 함수
+    const convertGeoJsonToPath = (geojson) => {
+        try {
+            const coords = geojson.features[0].geometry.coordinates;
+            return coords.map(([lng, lat]) => ({ lat, lng }));
+        } catch (err) {
+            console.error("경로 변환 실패", err);
+            return [];
+        }
+    };
     useEffect(() => {
         if (!places || places.length === 0) return;
 
@@ -50,6 +58,18 @@ export default function GoogleMapComponent({ places }) {
                     infoWindow.open(map, marker);
                 });
             });
+// 경로선 표시
+            if (routeGeoJson) {
+                const path = convertGeoJsonToPath(routeGeoJson);
+                new window.google.maps.Polyline({
+                    path,
+                    geodesic: true,
+                    strokeColor: "#FF0000",
+                    strokeOpacity: 1.0,
+                    strokeWeight: 4,
+                    map: map,
+                });
+            }        
         };
 
         if (!window.google || !window.google.maps) {
@@ -57,7 +77,7 @@ export default function GoogleMapComponent({ places }) {
         } else {
             drawMap();
         }
-    }, [places]);
+    }, [places, routeGeoJson]); // routeGeoJson도 의존성에 추가
 
     return (
         <div
