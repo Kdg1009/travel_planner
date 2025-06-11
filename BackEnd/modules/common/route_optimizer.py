@@ -2,7 +2,7 @@ from components.plan_data import Location, Visiting, DayPlan, TravelPlan
 from components.user_request_data import Duration
 from components.llm_score_data import PlaceScore
 from datetime import datetime, timedelta
-from typing import List, Optional
+from typing import List, Optional, Dict
 import requests
 import numpy as np
 # ---- remove after implementing naver api
@@ -21,40 +21,8 @@ def get_days(duration: Duration) -> List[str]:
         for i in range(delta.days + 1)
     ]
 
-# get actual distance
 def get_distance(start_lat, start_lng, end_lat, end_lng, mode="driving"):
-    # simple directed distance
-    # remove after implementing naver api
     return math.sqrt((start_lat - end_lat)**2 + (start_lng - end_lng)**2)
-    headers = {
-        "X-NCP-APIGW-API-KEY-ID": NAVER_CLIENT_ID,
-        "X-NCP-APIGW-API-KEY": NAVER_CLIENT_SECRET,
-    }
-
-    url = f"https://naveropenapi.apigw.ntruss.com/map-direction/v1/driving"
-    params = {
-        "start": f"{start_lng},{start_lat}",
-        "goal": f"{end_lng},{end_lat}",
-        "option": "trafast"  # shortest path with traffic
-    }
-
-    response = requests.get(url, headers=headers, params=params)
-    if response.status_code == 200:
-        data = response.json()
-        try:
-            route = data["route"]["trafast"][0]
-            distance_m = route["summary"]["distance"]
-            duration_sec = route["summary"]["duration"]
-            return {
-                "distance_km": distance_m / 1000,
-                "duration_min": duration_sec / 60000
-            }
-        except Exception as e:
-            print("Failed to parse route:", e)
-            return None
-    else:
-        print("API Error:", response.status_code, response.text)
-        return None
 
 def cluster_pois(pois: List[Visiting], eps=0.05, min_samples=2) -> List[int]:
     """
@@ -94,22 +62,8 @@ def softmax(scores: List[float]) -> List[float]:
     exp_scores = np.exp(np.array(scores))
     return (exp_scores / exp_scores.sum()).tolist()
 
-def next_visit(scores: List[float], pois: List[Visiting], clusters: List[int], 
+def next_visit(scores: List[float], pois: List[Visiting], clusters: Optional[List[int]], 
                prev_visit: Optional[Visiting] = None, prev_cluster: Optional[int]=None, incentive_factor: float = 1.3) -> Visiting:
-    """
-    Select the next POI to visit based on scores and clustering
-    
-    Args:
-        scores: List of scores for each POI
-        pois: List of Visiting objects
-        clusters: List of cluster labels for each POI
-        prev_visit: The previously visited POI (optional)- not used in this function, but may used in later extension such as use concepts in weighting
-        prev_cluster: The cluster ID of the previous visit (optional)
-        incentive_factor: Factor to boost scores for POIs in the same cluster
-        
-    Returns:
-        The next POI to visit
-    """
     # Create a copy of scores to modify
     adjusted_scores = scores.copy()
     
@@ -127,21 +81,72 @@ def next_visit(scores: List[float], pois: List[Visiting], clusters: List[int],
     selected_poi = pois[selected_idx]
 
     return selected_poi
+def optimize_route(user_id: str, duration: Duration, pois_data: Dict[str, List[PlaceScore]], visits_per_day: int = 3, score_threshold=7.4) -> TravelPlan:
+    days = get_days(duration)
 
-def optimize_route(user_id: str, duration: Duration, pois_data: List[PlaceScore], visits_per_day: int = 3, score_threshold=7.4) -> TravelPlan:
-    """
-    Create an optimized travel plan based on POIs provided as dictionaries
-    
-    Args:
-        duration: Duration object with start and end dates
-        pois_data: List of POI dictionaries with format:
-                  {'name': str, 'latitude': str, 'longitude': str, 'score': str, 'concept': str}
-        visit_per_day: Maximum number of visits per day
-        score_threshold: Minimum score for a POI to be considered
-        
-    Returns:
-        Optimized TravelPlan
-    """
+    def parse_and_filter(pois: List[PlaceScore]):
+        parsed_pois = []
+        scores = []
+        for poi_dict in pois:
+            poi = Visiting(
+                name=poi_dict['name'],
+                location=Location(
+                    latitude=poi_dict['latitude'],
+                    longitude=poi_dict['longitude']
+                ),
+                concept=poi_dict['category']
+            )
+            parsed_pois.append(poi)
+            scores.append(float(poi_dict['score']))
+        filtered_indices = [i for i, s in enumerate(scores) if s >= score_threshold]
+        return [parsed_pois[i] for i in filtered_indices], [scores[i] for i in filtered_indices]
+
+    # Separate base and sub POIs
+    base_pois, base_scores = parse_and_filter(pois_data.get("base", []))
+    sub_pois, sub_scores = parse_and_filter(pois_data.get("sub", []))
+
+    # Early return if either list is empty
+    if not base_pois or not sub_pois:
+        return TravelPlan(user_id=user_id, plans=[])
+
+    # Cluster sub POIs only (base has no cluster logic)
+    sub_clusters = cluster_pois(sub_pois)
+
+    travel_plan = TravelPlan(user_id=user_id, plans=[])
+
+    for day_idx in range(len(days)):
+        current_date = days[day_idx]
+        day_plan = DayPlan(date=current_date, place_to_visit=[])
+
+        if not base_pois:
+            break  # no more base options to start the day
+
+        # 1. First POI from base
+        first_poi = next_visit(base_scores, base_pois, None, None, None)
+        day_plan.place_to_visit.append(first_poi)
+        idx = base_pois.index(first_poi)
+        base_pois.pop(idx)
+        base_scores.pop(idx)
+        prev_visit = first_poi
+        prev_cluster = None
+
+        # 2. Follow-up visits from sub
+        for _ in range(min(visits_per_day - 1, len(sub_pois))):
+            if not sub_pois:
+                break
+            next_poi = next_visit(sub_scores, sub_pois, sub_clusters, prev_visit, prev_cluster)
+            day_plan.place_to_visit.append(next_poi)
+            idx = sub_pois.index(next_poi)
+            sub_pois.pop(idx)
+            sub_scores.pop(idx)
+            prev_cluster = sub_clusters.pop(idx)
+            prev_visit = next_poi
+
+        travel_plan.plans.append(day_plan)
+
+    return travel_plan
+
+""" def optimize_route(user_id: str, duration: Duration, pois_data: Dict[str,List[PlaceScore]], visits_per_day: int = 3, score_threshold=7.4) -> TravelPlan:  
     days = get_days(duration)
     # Convert dictionary POIs to Visiting objects and extract scores
     pois = []
@@ -222,4 +227,4 @@ def optimize_route(user_id: str, duration: Duration, pois_data: List[PlaceScore]
         # Add day plan to travel plan
         travel_plan.plans.append(day_plan)
     
-    return travel_plan
+    return travel_plan """

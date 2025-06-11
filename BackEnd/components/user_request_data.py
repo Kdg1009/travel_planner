@@ -1,5 +1,5 @@
 from pydantic import BaseModel
-from typing import Optional, List, Any
+from typing import Optional, List, Any, Dict
 
 # Pydantic models for validation (user_data defined)
 class Duration(BaseModel):
@@ -7,7 +7,7 @@ class Duration(BaseModel):
     end: str
 
 class Kwargs(BaseModel):
-    filter: Optional[List[str]] = None
+    filter: Optional[List[Dict]] = None
     prev_map_data: Optional[Any] = None
     cache_key: Optional[str] = None
 

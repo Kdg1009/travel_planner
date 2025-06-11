@@ -7,7 +7,6 @@ router = APIRouter()
 
 @router.post("/get_pois")
 def get_pois(user_request: UserRequest):
-    print('user data:\n', user_request)
     # ignore next step if it is feedback step
     if user_request.kwargs.cache_key:
         pass
@@ -18,13 +17,13 @@ def get_pois(user_request: UserRequest):
         if not filter_data:
             filter_data = get_filter_from_llm(user_request)
             user_request.kwargs.filter = filter_data
-        print('filter:\n', filter_data)
+        print(f'filter(type:{type(filter_data)}):\n', filter_data)
     except Exception as e:
         print("filter creation failed")
         raise HTTPException(status_code=500, detail=str(e))
     try:
         # Step 2: Fetch POIs based on filter
-        poi_list = extract_pois(user_request, filter_data, limit=10)
+        poi_list = extract_pois(user_request, filter_data, limit=3)
         print('poi list:\n',poi_list)
     except Exception as e:
         print("poi extraction failed")
@@ -32,7 +31,7 @@ def get_pois(user_request: UserRequest):
     try:
         # Step 3: Save to CSV
         user_request.kwargs.cache_key = save_pois(poi_list)
-        print('user data:\n',user_request)
+        print("finish saving pois")
         # Step 4: Return result
         return {
             "user_request": user_request.model_dump()

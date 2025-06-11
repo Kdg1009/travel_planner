@@ -1,12 +1,56 @@
 from modules.common.llm_request import request_to_llm
 import json
 from modules.common.cache_util import save_data
-import csv
-from typing import List
-from collections import deque
+from typing import List, Dict
 from components.user_request_data import UserRequest
 
-def parse_filter_from_response(target_category, user_profile) -> List[dict]:
+def get_filter_from_llm(user_data:UserRequest) -> List[Dict[str, str]]:
+    with open("public\concept_categories.json","r",encoding="utf-8") as file:
+        whole_cat = json.load(file)
+    category_group = whole_cat.get(user_data.concept)
+    
+    category_list = "\n".join(f"{k} ({v})" for k, v in category_group.items())
+
+    prompt = f"""
+You are a helpful travel planner assistant.
+
+User profile:
+- Companions: {user_data.companions}
+- Travel theme: {user_data.concept}
+- Extra request: {user_data.extra_request}
+
+Below is a list of nature-related travel categories with their IDs:
+
+{category_list}
+
+For each category, decide if it fits the user's request and companions. 
+If it fits, return a JSON object like:
+{{"id": <category_id>, "query": "<search phrase>"}}
+
+You may return **multiple categories** if several fit. Return a JSON list of these objects.
+Do not include categories that don’t fit.
+"""
+
+    # Call LLM (adjust this part to your stack)
+    response = request_to_llm(prompt)
+    try:
+        parsed = json.loads(response)  # parsed is now List[Dict[str, str]]
+        return parsed
+    except json.JSONDecodeError as e:
+        print("Failed to parse JSON:", e)
+        return []
+
+# ---- Helper to save pois ----
+# ---- save poi_list in cache ----
+def save_pois(poi_list):
+    payload = {
+        "poi_list": poi_list
+    }
+    key = save_data(payload=payload)
+    return key
+
+
+""" def parse_filter_from_response(target_category, user_profile) -> List[dict]:
     if not target_category:
         return []
     instruction = (
@@ -76,13 +120,5 @@ def get_filter_from_llm(user_data: UserRequest) -> List[str]:
         except Exception as e:
             print(f"⚠️ Error during BFS filter parsing: {e}")
             continue
-    return list(reversed(result_filters))
+    return list(reversed(result_filters)) """
 
-# ---- Helper to save pois ----
-# ---- save poi_list in cache ----
-def save_pois(poi_list):
-    payload = {
-        "poi_list": poi_list
-    }
-    key = save_data(payload=payload)
-    return key

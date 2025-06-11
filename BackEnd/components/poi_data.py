@@ -16,10 +16,10 @@ class Photos(BaseModel):
 
 class Place(BaseModel):
     name:str
-    place_id:str
+    place_id:Optional[str]=None
     vicinity:Optional[str]=None
     geometry:Geometry
-    types:List[str]
+    categories:List[str]
     rating:Optional[float]=None
     user_ratings_total:Optional[int]=None
     opening_hours:Optional[OpeningHours] = None
