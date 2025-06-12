@@ -27,7 +27,7 @@ For each category, decide if it fits the user's request and companions.
 If it fits, return a JSON object like:
 {{"id": <category_id>, "query": "<search phrase>"}}
 
-You may return **multiple categories** if several fit. Return a JSON list of these objects.
+You may return **multiple categories** if several fit(3-4 is recommanded). Return a JSON list of these objects.
 Do not include categories that don’t fit.
 """
 

@@ -29,6 +29,7 @@ def get_scores_for_batch(batch: List[Dict], user_data: UserRequest) -> List[Plac
         try:
             reviews_text = "\n".join([f"{i+1}. {review['text']}" for i, review in enumerate(reviews)])
         except Exception as e:
+            reviews_text = ""
             print(f"⚠️ Failed to format reviews for {name}: {e}, raw reviews: {reviews}")
 
         llm_prompt = f"""

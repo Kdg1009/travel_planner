@@ -123,22 +123,31 @@ def get_sub_from_api(base:Place, filters, limit) -> List[Place]:
     lat = base.geometry.lat
     lng = base.geometry.lng
     sub_pois = []
+    seen_ids = set()
 
     for f in filters:
-        sub_pois.extend(sub_pois_for(lat,lng,f,limit))
+        pois = sub_pois_for(lat, lng, f, limit)
+        for p in pois:
+            if p.place_id not in seen_ids:
+                seen_ids.add(p.place_id)
+                sub_pois.append(p)
     return sub_pois
 
-def extract_pois(user_request:UserRequest, filters:List[Dict[str,str]], limit=3)-> Dict: # return {"base":List[Place], "sub":List[Place]}
+def extract_pois(user_request:UserRequest, filters:List[Dict[str,str]], limit=5)-> Dict: # return {"base":List[Place], "sub":List[Place]}
     dates = return_date_iter(user_request.duration.start, user_request.duration.end)
     # step 1: get base poi per day(2) from llm
     print("start extracting base...")
     bases = get_base_from_llm(user_request, count=len(dates)*2)
     subs = []
+    seen_ids = set()
 
-    for i, base in enumerate(bases):
+    for base in bases:
         # step 2: get sub pois that related to base
         sub_pois = get_sub_from_api(base, filters, limit) # limit: upper limit of pois for each filter
-        subs.extend(sub_pois)
+        for poi in sub_pois:
+            if poi.place_id not in seen_ids:
+                seen_ids.add(poi.place_id)
+                subs.append(poi)
 
     return {"base":bases, "sub":subs}
 

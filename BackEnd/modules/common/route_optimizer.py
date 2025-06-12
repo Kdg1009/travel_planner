@@ -106,7 +106,7 @@ def optimize_route(user_id: str, duration: Duration, pois_data: Dict[str, List[P
     sub_pois, sub_scores = parse_and_filter(pois_data.get("sub", []))
 
     # Early return if either list is empty
-    if not base_pois or not sub_pois:
+    if not base_pois:
         return TravelPlan(user_id=user_id, plans=[])
 
     # Cluster sub POIs only (base has no cluster logic)
